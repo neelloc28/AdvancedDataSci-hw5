@@ -1,0 +1,161 @@
+---
+title: 'Assignment #5'
+author: 'Colleen Minnihan'
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    code_download: true
+---
+
+```{r}
+library(countrycode)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(rgeos)
+```
+
+
+```{r warning=FALSE}
+#finding coordinates for every country in the world dataset
+world <- ne_countries(scale = "medium", returnclass = "sf")
+coordinates <- cbind(world, st_coordinates(st_centroid(world$geometry)))
+coordinates <- 
+  coordinates %>%
+  select(name,sovereignt, type, X,Y)
+```
+
+
+## Exercises: 
+
+<br>
+
+##### Question 1: Convert the name of a country of choice into five different languages of your choice. Use the world dataset and use countryname. You can also use 'codelist' to look at different destinations. (Remove eval=FALSE)
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+question1 <-
+  world %>%
+  filter(name == "Puerto Rico")
+
+#Repeat the code down below for 4 other languages.
+countryname(question1$name, "cldr.name.bn") #Bangla
+
+countryname(question1$name, "cldr.name.es") #Spanish
+
+countryname(question1$name, "cldr.name.ko") #Korean
+
+countryname(question1$name, "cldr.name.ja") #Japanese
+
+countryname(question1$name, "cldr.name.he") #Hebrew
+```
+<br> 
+
+##### Question 2: Find the 'region' name and code for the top 30 countries. Use 'countrycode' for this. 
+
+```{r}
+#remove eval=FALSE before running
+question2 <-
+  world %>% 
+  head(30)
+
+countrycode(question2$name, origin = 'country.name', destination = 'region') #region name
+
+countrycode(question2$name, origin = 'country.name', destination = 'iso3c') #code
+```
+<br>
+
+
+##### Question 3: Use the guess_field() function to find the closest match of the origin of the adm0_a3 column in the world dataset.
+
+```{r}
+guess_field(world$adm0_a3)
+```
+
+<br> 
+
+##### Question 4: Draw a map with 5 countries with different labels using geom_sf, geom_text and countryname (you have complete freedom over what countries you want to do)
+
+
+```{r}
+coordinates <- cbind(world, st_coordinates(st_centroid(world$geometry)))
+coordinates <- 
+  coordinates %>%
+  select(name,sovereignt, type, X,Y)
+
+SouthKorea <-
+  coordinates[world$name == 'Korea',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+China <-
+  coordinates[world$name == 'China',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+Japan <- 
+  coordinates[world$name == 'Japan',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+Japan <- 
+  coordinates[world$name == 'Japan',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+India <- 
+  coordinates[world$name == 'India',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+Nepal <- 
+  coordinates[world$name == 'Nepal',] %>%
+  mutate(label = countryname(name, destination = 'cldr.name.es'))
+
+  
+ggplot() + 
+  geom_sf(data = SouthKorea) + 
+  geom_sf(data = Japan) +
+  geom_sf(data = China) +
+  geom_sf(data = India) +
+  geom_sf(data = Nepal) +
+  geom_text(data=SouthKorea ,aes(X, Y, label=label), size=3) +
+  geom_text(data=Japan ,aes(X, Y, label=label), size=3) +
+  geom_text(data=China ,aes(X, Y, label=label), size=5) +
+  geom_text(data=India ,aes(X, Y, label=label), size=5) +
+  geom_text(data=Nepal ,aes(X, Y, label=label), size=3)
+```
+
+<br> 
+
+##### Question 5: Draw a map that has each country named after the continent it belongs to and colored  by their continent. Make sure your map looks like an actual map (not grids, not axis, add a title, a caption, etc.)
+
+```{r}
+continents <-
+  mutate(coordinates) %>%
+  mutate(continent = countrycode(sovereignt, origin = 'country.name', destination = 'continent'))
+
+#with colored text
+ggplot(data = world) +
+    geom_sf() + 
+    geom_text(data=continents ,aes(X, Y, label=continent, color = continent), check_overlap = TRUE, size=2) +
+    labs(x = NULL,
+         y = NULL)+
+    theme(panel.background = element_blank()) +
+  scale_color_manual(values=c("red", "orange", "purple", "maroon", "blue")) +
+  ggtitle("World Map Colored by Continent") +
+  labs(Continent = "hi", caption = "Author: Colleen Minnihan") +
+  theme(legend.position = "bottom")
+
+#with colored continents
+ggplot(data = world) +
+    geom_sf(mapping = aes(fill = continent)) + 
+    geom_text(data=continents ,aes(X, Y, label=continent), check_overlap = TRUE, size=2) +
+    labs(x = NULL,
+         y = NULL)+
+    theme(panel.background = element_blank()) +
+  scale_fill_manual(values=c("pink", "grey", "violet", "maroon", "blue", "green3", "yellow", "lightblue")) +
+  ggtitle("World Map Colored by Continent") +
+  labs(color = "Continent", caption = "Author: Colleen Minnihan")
+```
+
+
